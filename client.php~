@@ -1,0 +1,17 @@
+<?php	
+	include_once 'includes/db_connect.php';
+	include_once 'includes/functions.php';
+		
+	if(isset($_POST["action"]) && !empty($_POST["action"])){
+		$action = 	$_POST["action"];
+		$title = $_POST["title"];
+		
+		switch($action){
+			// case 'subscribe': echo "Action: " . $action . " title: " . $title;//subscribe($title);
+			case 'subscribe': subscribe($title, $mysqli);
+		}
+	}
+	
+	
+
+?>

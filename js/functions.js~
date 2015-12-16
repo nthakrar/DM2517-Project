@@ -1,0 +1,24 @@
+$(document).ready(function(){
+
+	$(".subscribe_btn").click(function(){
+		title_str = $(this).attr("data-title");
+
+		$.ajax( 
+			{
+				url: 	"http://www.csc.kth.se/~thakrar/DM2517/projekt/index.php",
+				data: {
+						action: "subscribe",
+						title : title_str
+					},
+				type:	"post",
+				success: function(data){
+					alert("success: " + data);
+				},
+				error: function(request, errorThrown){
+					alert("error: " + errorThrown);
+				}
+
+			});
+	});
+	
+});

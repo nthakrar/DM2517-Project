@@ -1,0 +1,26 @@
+<?php 
+header("Content-type: text/xml; charset=utf-8");
+include_once 'includes/db_connect.php'; 
+include_once 'includes/functions.php'; 
+?>
+
+<seriescatalog>
+
+<?php 
+	// $query = "SELECT * FROM series";
+	// $result = $mysqli->query($query);
+	$result= db_query_all_series($mysqli);
+	$returnstr="";
+	while($row = $result->fetch_assoc()){
+		
+		$returnstr.="<series>";
+		$returnstr.="<title>".$row['title']."</title>";
+		$returnstr.="<year>".$row['year']."</year>";
+		$returnstr.="<plot>".$row['plot']."</plot>";
+		$returnstr.="</series>";
+		print utf8_encode($returnstr);
+	}
+	
+?>
+
+</seriescatalog>

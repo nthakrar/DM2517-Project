@@ -1,0 +1,8 @@
+<!--Elements -->
+<!ELEMENT root(UserCatalog+)>
+<!ELEMENT UserCatalog (user+) >
+<!ELEMENT user (user_id, firstname, lastname, email) >
+<!ELEMENT user_id (#PCDATA)>
+<!ELEMENT firstname (#PCDATA)>
+<!ELEMENT lastname (#PCDATA)>
+<!ELEMENT email (#PCDATA)>

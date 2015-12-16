@@ -1,0 +1,18 @@
+/*table: users
+	primary key: user_id
+
+*/
+CREATE TABLE `users` (  `user_id` varchar(40) NOT NULL,  `password` varchar(128) NOT NULL,  `salt` varchar(128) NOT NULL,  `email` varchar(100) NOT NULL,  PRIMARY KEY  (`user_id`)) ENGINE=InnoDB DEFAULT CHARSET=latin1
+
+/*table: series
+	primary key: tutke
+
+*/
+CREATE TABLE `series` (  `title` varchar(255) NOT NULL,  `year` varchar(50) NOT NULL,  `rated` varchar(50) NOT NULL,  `released` varchar(50) NOT NULL,  `runtime` varchar(50) NOT NULL,  `genre` varchar(50) NOT NULL,  `director` varchar(255) NOT NULL,  `actors` text NOT NULL,  `plot` text NOT NULL,  `language` varchar(50) NOT NULL,  `country` varchar(50) NOT NULL,  `awards` varchar(50) NOT NULL,  `poster` varchar(255) NOT NULL,  PRIMARY KEY  (`title`)) ENGINE=InnoDB DEFAULT CHARSET=latin1
+
+/*table: subscribes
+	foreign key: user_id references users.user_id
+	foreign key: title references series.title
+
+*/
+CREATE TABLE `subsribes` (  `user_id` varchar(40) NOT NULL,  `title` varchar(255) NOT NULL,  KEY `user_id` (`user_id`,`title`),  KEY `title` (`title`),  CONSTRAINT `subsribes_ibfk_2` FOREIGN KEY (`title`) REFERENCES `series` (`title`) ON DELETE CASCADE ON UPDATE CASCADE,  CONSTRAINT `subsribes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE) ENGINE=InnoDB DEFAULT CHARSET=latin1
