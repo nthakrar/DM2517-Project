@@ -43,7 +43,7 @@
 							<xsl:apply-templates select="usercatalog" />
 						</div>
 						<h1 class="page-header"> All series </h1>
-							
+							<xsl:apply-templates select="seriescatalog" />
 						</div>
 
 					</div>
@@ -85,7 +85,9 @@
 
 <xsl:template match="seriescatalog">
 	
-	
+	<div class="row" style="text-align:center">
+		<xsl:apply-templates select="series" />
+	</div>
 	
 </xsl:template>
 
@@ -102,13 +104,14 @@
 			<div>
 				<xsl:value-of select="year"/>
 			</div>
+			<p>
+				<span class="delete_series glyphicon glyphicon-trash">
+					<xsl:attribute name="data-title">
+						<xsl:value-of select="title" />
+					</xsl:attribute>
+				</span>
+			</p>
 			
-			<div class = "unsubscribe_btn">
-				<xsl:attribute name="data-title">
-					<xsl:value-of select="title" />
-				</xsl:attribute>
-				Unsubscribe
-			</div>
 		</div>
 	</div>
 </xsl:template>

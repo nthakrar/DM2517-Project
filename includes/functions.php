@@ -307,14 +307,31 @@
 				
 		}
 	}
+	
+	function update_user_profile($mysqli, $user_id, $firstname,$lastname, $email){
+		if($update_stmt = $mysqli->prepare("UPDATE users SET firstname=?, lastname=?,  email=? WHERE user_id=?")){
+			$update_stmt -> bind_param('ssss', $firstname, $lastname,$email, $user_id);
+			$update_stmt->execute();
+			// echo "affected rows: " . $update_stmt->affected_rows;
+			echo "Successfully updated your profile";
+		}else{
+			echo "failure on updating profile";
+		}
+	}
+	function edit_user_profile($mysqli, $user_id){
+		print(db_query_user($mysqli, $user_id, ""));
+	}
 	function db_query_user($mysqli, $user_id, $status){
+		
 		$query = "SELECT * FROM users WHERE user_id='".$user_id."'";
 		$return_str="";
 		if($result = $mysqli->query($query)){
+			
 			while($row = $result->fetch_assoc()){
 				if(!empty($status)){
 					$return_str.="<user status= '".$status."'>";
 				}else{
+					
 					$return_str.="<user>";
 				}
 				
@@ -393,6 +410,25 @@
 			print("Failed unsubscribing: ($user_id, $title)");
 		}
 	}
+	function remove_series($mysqli, $title){
+		if($delete_stmt = $mysqli->prepare("DELETE FROM series WHERE title = ?")){
+			$delete_stmt->bind_param('s', $title);
+			$delete_stmt->execute();
+			print("Successfully deleted $title from series table");
+		}else{
+			print("Failed deleting series from table series: $title");
+		}
+		if($delete_stmt = $mysqli->prepare("DELETE FROM subsribes WHERE title = ?")){
+			$delete_stmt->bind_param('s', $title);
+			$delete_stmt->execute();
+			print("Successfully deleted $title from subscribes table");
+		}else{
+			print("Failed deleting series from table subsribes: $title");
+		}
+		
+		// unsubscribe($title, $mysqli, $user_id);
+	}
+	
 	function test($title){
 		echo $title;	
 	}

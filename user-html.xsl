@@ -29,6 +29,30 @@
 				<div class="row">
 					<xsl:apply-templates select="usercatalog"/>
 					<xsl:apply-templates select="seriescatalog" />
+					<div id ="usercatalog" class="col-md-10 col-md-offset-2" style="display:none">
+						<h1 class="page-header">Edit profile</h1>
+						<div class="row" style="text-align:center">
+						<div class="col-md-2 col-md-offset-2">
+						</div>
+						<div class="col-md-4">
+							<form class=""  name="edit_form">
+								
+								First name: <input id ="edit_firstname" class="form-control" type="text" name="firstname" />
+								Last name: 	<input id ="edit_lastname"  class="form-control" type="text"  />
+								email: 	<input id ="edit_email" class="form-control" type="text" 
+												 name="email"/>
+								<div class="col-md-9">
+									
+								</div>
+								<div class="col-md-3">
+									<button  type="button" id="edit_profile_updatebtn" class="btn btn-lg btn-primary btn-block btn-signin">Save</button>
+								</div>
+								
+							</form>
+						</div>
+							
+						</div>
+					</div>
 					
 				</div>
 			</div>
@@ -52,8 +76,9 @@
 		<ul class="nav nav-sidebar">
 			
 			<li><a href="index.php">What's trending </a></li>
+			<li id ="editprofile"> <a>Edit profile</a></li>
 			<li><a href="#">Manage series</a></li>
-			<li><a href="#">Calendar</a></li>
+			<li id ="calendar"><a href="#">Calendar</a></li>
 			<li><a href="includes/logout.php">Sign out</a></li>
 		</ul>
 		 
@@ -81,9 +106,10 @@
 	</p>
 </xsl:template>
 
+
 <xsl:template match="seriescatalog">
 	
-	<div class="col-md-10 col-md-offset-2">
+	<div id ="seriescatalog" class="col-md-10 col-md-offset-2">
 		<h1 class="page-header">My Collection</h1>
 		<div class="row" style="text-align:center">
 			<xsl:choose>
@@ -125,9 +151,7 @@
 					</xsl:attribute>
 				</img>
 			</div>
-			
-			
-			
+						
 		</div>
 		<div class = "unsubscribe_btn">
 			<xsl:attribute name="data-title">

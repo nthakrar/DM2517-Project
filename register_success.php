@@ -10,7 +10,7 @@
     <body>
 		<script>
 			window.setTimeout(function() {
-				window.location.href = 'http://xml.csc.kth.se/~thakrar/DM2517/projekt/index.php'
+				window.location.href = 'index.php'
 			}, 3000);
 		</script>
         <h1>Registration successful!</h1>

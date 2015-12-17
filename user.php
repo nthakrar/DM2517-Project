@@ -12,7 +12,10 @@ sec_session_start();
 	if (login_check($mysqli) == true){
 		$to_present = "<usercatalog>";
 		
-		$user_id = $_SESSION["user_id"];		
+		$user_id = $_SESSION["user_id"];	
+		if($user_id=="admin"){
+			header("Location: admin.php?");
+		}
 		$to_present .= db_query_user($mysqli, $user_id, "");
 		
 		$to_present .="</usercatalog>";

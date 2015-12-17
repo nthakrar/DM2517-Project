@@ -7,6 +7,9 @@
 	sec_session_start();
 	if(login_check($mysqli)){
 		$user = $_SESSION["user_id"];
+		if($user=="admin"){
+			header("Location: admin.php?");
+		}
 		$to_print = db_query_user($mysqli, $user, "logged_in");
 		print($to_print);
 	}else{

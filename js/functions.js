@@ -1,5 +1,60 @@
 $(document).ready(function(){
 
+	$("#calendar").click(function(){
+		$("#seriescatalog.hide").hide();
+	});
+	
+	$("#editprofile").click(function(){
+		$("#seriescatalog").hide();
+		$("#usercatalog").show();
+		
+		$.ajax({
+			url: "client.php",
+			type: "post",
+			data: {
+				action: "edit_profile"
+			},
+			success: function(data){
+				
+				var xmlDoc = $.parseXML(data);
+				$xml  = $( xmlDoc );
+				$email = $xml.find("email");
+				$fname = $xml.find("firstname");
+				$lname = $xml.find("lastname");
+				$("#edit_firstname").val($fname.text());
+				$("#edit_lastname").val($lname.text());
+				$("#edit_email").val($email.text());
+				$("#edit_firstname").focus();
+			}
+			
+		});
+	});
+	
+	$("#edit_profile_updatebtn").click(function(){
+		firstname = $("#edit_firstname").val();
+		lastname = $("#edit_lastname").val();
+		email = $("#edit_email").val();
+		if(firstname.length >0 && lastname.length >0 && email.length >0 ){
+			$.ajax({
+				url: "client.php",
+				data: {
+					action: "update_profile",
+					new_firstname : firstname,
+					new_lastname : lastname,
+					new_email : email
+				},
+				type: "post",
+				success: function(data){
+					alert(data);
+					window.location.reload(true);
+				}
+				
+			});
+		}else{
+			alert("Cannot update profile with empty values...");
+		}
+		
+	});
 	$(".subscribe_btn").click(function(){
 
 		title_str = $(this).attr("data-title");
@@ -18,7 +73,7 @@ $(document).ready(function(){
 					// BootstrapDialog.alert("what");
 					
 				}else if(data=='already subscribed'){
-					alert("You are already subscribed to " + $title_str);
+					alert("You are already subscribed to " + title_str);
 				}else{
 					alert(data);
 					
@@ -43,7 +98,7 @@ $(document).ready(function(){
 					title: title_str
 			},
 			success: function(data){
-				// alert(data);
+				alert(data);
 				window.location.reload(true);
 			},
 			error: function(data){
@@ -67,6 +122,29 @@ $(document).ready(function(){
 				data:{
 						action:"remove_user",
 						user_id: userid
+				},
+				type: "post",
+				success: function(data){
+					alert(data);
+					window.location.reload(true);
+				},
+				error: function(data){
+					alert(data);
+				}
+					
+			});
+	});
+	$(".delete_series").click(function(){
+		title_str = $(this).attr("data-title")
+		// alert("function.js: " + $(this).attr("data-value"));
+		//userid= $(this).attr("data-value");
+		
+		$.ajax(
+			{
+				url:"client.php",
+				data:{
+						action:"remove_series",
+						title: title_str
 				},
 				type: "post",
 				success: function(data){
