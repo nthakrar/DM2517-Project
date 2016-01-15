@@ -1,12 +1,13 @@
 $(document).ready(function(){
-	// $(".series_image").css("width","50%");
-	// $(".series_image").height(250);
-	var carousel_image_srcs=[];
-	var carousel_series_title=[];
 	$("div.jumbotron").css('cursor', 'pointer');
 	$("div.jumbotron").click(function(){
 		window.open("http://xml.csc.kth.se/~thakrar/DM2517-Project/index.php", "_self");
 	});
+	// $(".series_image").css("width","50%");
+	// $(".series_image").height(250);
+	var carousel_image_srcs=[];
+	var carousel_series_title=[];
+	
 	$(".series_block").each(function(){
 		attr_src = $(this).find("img.series_image").attr('src');
 		if(attr_src!="images/default_image.png"){
