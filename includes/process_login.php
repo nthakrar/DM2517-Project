@@ -18,7 +18,7 @@
 			}
 		}else{
 			//login failed
-			header("Location: ../index.php?error=1");
+			header("Location: ../index.php?err=loginFailed");
 		}
 	}else{
 		 // The correct POST variables were not sent to this page. 

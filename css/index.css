@@ -1,3 +1,22 @@
+#myCarousel{
+	margin-top:50px;
+}
+.carousel-inner div.item{
+	text-align: center;
+	margin-right:auto;
+	margin-left:auto
+}
+.carousel-inner div.item img{
+	text-align: center;
+	margin-right:auto;
+	margin-left:auto;
+	width: 300px;
+    height: 400px;
+}
+#show_all_series{
+	cursor:pointer;
+	font-size:16px;
+}
 #login_box_img{
 	text-align:center;
 }
@@ -62,6 +81,36 @@
 	cursor: pointer;
 	padding-top:10px;
 }
+
+.series_image{
+	width:50%;
+	height: 250px;
+}
+
+.info_series{
+	padding-top:40px;
+	z-index: 10;
+    background-color: rgba(0,0,0,0.85);
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+	color:white;
+	text-align:center;
+	font-size:16px;
+  
+}
+.info_series .close_info_series{
+	font-weight: bold;
+	cursor: pointer;
+	padding-top:10px;
+}
 .info_series .info_series_plot{
 	
+}
+.info_series img{
+	width:10md
+	%;
 }

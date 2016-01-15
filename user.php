@@ -1,7 +1,6 @@
 <?php include 'prefix_user.php'; ?>
 <root>
 
-
 <?php
 include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';

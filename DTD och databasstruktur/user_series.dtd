@@ -1,9 +1,13 @@
 <!--Elements -->
-<!ELEMENT root(UserCatalog+, SeriesCatalog+)>
-<!ELEMENT UserCatalog (user+) >
+<!ELEMENT root(usercatalog, seriescatalog)>
+<!ELEMENT usercatalog (user*) >
 <!ELEMENT user (user_id, firstname, lastname, email) >
-<!ELEMENT SeriesCatalog (series+) >
-<!ELEMENT series (title, year, rated, released, runtime, genre, director, actors, plot, language, country, awards, poster) >
+<!ELEMENT seriescatalog (series*)>
+<!ELEMENT series (title, year, rated, released, runtime, genre, director, actors, plot, language, country, poster)>
+<!ELEMENT user_id (#PCDATA)>
+<!ELEMENT firstname (#PCDATA)>
+<!ELEMENT lastname (#PCDATA)>
+<!ELEMENT email (#PCDATA)>
 <!ELEMENT title (#PCDATA)>
 <!ELEMENT year (#PCDATA)>
 <!ELEMENT rated (#PCDATA)>
@@ -15,9 +19,5 @@
 <!ELEMENT plot (#PCDATA)>
 <!ELEMENT language (#PCDATA)>
 <!ELEMENT country (#PCDATA)>
-<!ELEMENT awards (#PCDATA)>
 <!ELEMENT poster (#PCDATA)>
-<!ELEMENT user_id (#PCDATA)>
-<!ELEMENT firstname (#PCDATA)>
-<!ELEMENT lastname (#PCDATA)>
-<!ELEMENT email (#PCDATA)>
+

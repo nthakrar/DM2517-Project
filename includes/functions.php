@@ -1,6 +1,80 @@
 <?php
 	include_once 'config.php';
-	
+	/*
+		Called in admin_add_series_id_table.php to add entries to series_id table for parsing rss
+	*/
+	function db_add_series_id_table($mysqli){
+		$file=fopen("http://xml.csc.kth.se/~thakrar/DM2517-Project/images/id_title_poster.txt", "r");
+		if($file){
+			while(!feof($file)){
+				
+				$id_title_poster = trim(fgets($file));
+				$exploded = explode(",", $id_title_poster);
+				$id = $exploded[0];
+				$title = $exploded[1];
+				$id = trim($id);
+				$title = trim($title);
+				
+				// echo $id . "," . $title;
+				
+				if ($insert_stmt = $mysqli->prepare("INSERT INTO series_id (id, name) VALUES (?, ?)")) {
+					$insert_stmt->bind_param('ss', $id, $title);
+					$insert_stmt->execute();
+				}else{printf("Errorcode: %d\n", $mysqli->errno);}
+			}
+			
+			fclose($file);	
+		}
+			
+	}
+	function calendar($mysqli, $userid){
+		$ids=array();
+		$query = "SELECT * FROM subsribes WHERE user_id='".$userid."'";
+		if($result = $mysqli->query($query)){
+			
+			while($row = $result->fetch_assoc()){
+				$title = $row["title"];
+				// echo $title;
+				$query2="SELECT id FROM series_id WHERE name='".$title."'";
+				if($result2 = $mysqli->query($query2)){
+					while($row2 = $result2->fetch_assoc()){
+						$id = $row2["id"];
+						$ids[$id]=$title;
+						// echo $id;
+						
+					}
+				}
+			}
+		}
+		echo parse_showrss($ids);
+	}
+	function parse_showrss($ids){
+		$arrlength = count($ids);
+		$arr_return = array();
+
+		$arr_top = array();
+		foreach($ids as $key => $value){
+			// echo $ids[$x]."\n";
+			
+			$arr_middle=array();
+			
+			$toquery = 'http://showrss.info/feeds/'.$key.'.rss';
+			$query = file_get_contents($toquery);
+			$xml=simplexml_load_string($query) or die("Error:parse_showrss");
+			
+			foreach($xml->channel->item as $item){
+				
+				$pair = array(
+					"episode"=>$item->title,
+					"date"=>$item->pubDate
+					
+				);
+				$arr_middle[]=$pair;
+			}
+			$arr_top[$value]=$arr_middle;
+		}
+		return json_encode($arr_top);
+	}
 	function sec_session_start(){
 		$session_name = 'sec_session_id';
 		$httponly = true;
@@ -55,6 +129,7 @@
 				return false;
 			}	
 		
+
 		}
 		
 	}
@@ -78,12 +153,6 @@
 				if($stmt->num_rows==1){
 					$stmt->bind_result($password);
 					$stmt->fetch();
-					
-					// echo "Test: " . $user_id. " " . $login_string. " **** ". $password;
-					
-					 // If the user exists get variables from result.
-					//$login_check = hash('sha512', $password . $user_browser);
-					//$_SESSION['login_check'] = $login_check;
 					
 					$_SESSION['login_check'] = $password;
 					$login_check = $_SESSION['login_check'];
@@ -117,6 +186,15 @@
 		}
 		
 	}
+	function xml_entities($s) {
+		return str_replace(array('&','>','<','"', "'"), array('&amp;','&gt;','&lt;','&quot;','&apos;'), $s);
+	}
+	function xmlsafe($s,$intoQuotes=1) {
+		if ($intoQuotes)
+			 return str_replace(array('&','>','<','"', '\''), array('&amp;','&gt;','&lt;','&quot;','&apos;'), $s);
+		else
+			 return str_replace(array('&','>','<'), array('&amp;','&gt;','&lt;'), html_entity_decode($s));
+	}
 	function db_query_series($mysqli, $where_clause){
 		
 		if(empty($where_clause)){
@@ -131,11 +209,17 @@
 			
 			$return_str="";
 			while($row = $result->fetch_assoc()){
+				$title = $row["title"];
+				// $title = xmlsafe($title);
 				$poster = $row["poster"] ;
 				$poster = substr($poster,34);
+				$poster=image_exists($poster);
+				$plot = $row["plot"];
+				$plot = xml_entities($plot);
+				
 				$return_str .= "<series>";
 				// echo $row["title"];
-				$return_str .= '<title>'.$row["title"].'</title>';
+				$return_str .= '<title>'.$title.'</title>';
 				$return_str .= '<year>'.$row["year"].'</year>';
 				$return_str .= '<rated>'.$row["rated"].'</rated>';
 				$return_str .= '<released>'.$row["released"].'</released>';
@@ -143,7 +227,7 @@
 				$return_str .= '<genre>'.$row["genre"].'</genre>';
 				$return_str .= '<director>'.$row["director"].'</director>';
 				$return_str .= '<actors>'.$row["actors"].'</actors>';
-				$return_str .= '<plot>'.$row["plot"].'</plot>';
+				$return_str .= '<plot>'.$plot.'</plot>';
 				$return_str .= '<language>'.$row["language"].'</language>';
 				$return_str .= '<country>'.$row["country"].'</country>';
 				// $return_str .= '<awards>'.$row["awards"].'</awards>';
@@ -154,10 +238,17 @@
 			mysqli_free_result($result);	
 			return $return_str;
 		}
-		// echo $return_str;
+	}
+	
+	function image_exists($poster){
+		if(!empty($poster) && file_exists("images/".$poster)){
+			$poster="images/".$poster;
+		}else{
+			$poster="images/default_image.png";
+		}
+		return $poster;
 	}
 	function db_query_series_whats_trending($mysqli, $where_clause){
-		// file_put_contents("./series_names/img_urls.txt", "hejhej");
 		if(empty($where_clause)){
 			
 			$query = "SELECT * FROM series";
@@ -165,22 +256,24 @@
 			$where_clause=trim($where_clause);
 			$query = "SELECT * FROM series WHERE title='".$where_clause."'";
 		}
-		
+		// echo "query: " . $query . "\n";
 		if($result = $mysqli->query($query)){
 			
 			$return_str="";
 			while($row = $result->fetch_assoc()){
+				
 				$year = $row["year"];
 				$year_exploded= explode("-", $year);
 				$start_year = $year_exploded[0];
-				if(intval($start_year==2015)){
+				
+				if(intval($start_year)==2015){
+					$title = $row["title"];
 					$poster = $row["poster"] ;
 					$poster = substr($poster,34);
-					
+					$poster=image_exists($poster);
 					$return_str .= "<series>";
-					// echo $row["title"];
-					$return_str .= '<title>'.$row["title"].'</title>';
-					$return_str .= '<year>'.$row["year"].'</year>';
+					$return_str .= '<title>'.$title.'</title>';
+					$return_str .= '<year>'.$year.'</year>';
 					$return_str .= '<rated>'.$row["rated"].'</rated>';
 					$return_str .= '<released>'.$row["released"].'</released>';
 					$return_str .= '<runtime>'.$row["runtime"].'</runtime>';
@@ -201,7 +294,6 @@
 			mysqli_free_result($result);	
 			return $return_str;
 		}
-		// echo $return_str;
 		
 
 	}
@@ -231,7 +323,7 @@
 	}
 	function query_omdb($mysqli){
 		mb_internal_encoding("UTF-8");
-		$file=fopen("./series_names/test.txt", "r");
+		$file=fopen("http://xml.csc.kth.se/~thakrar/DM2517-Project/images/id_title.txt", "r");
 		$title = "";
 		$result = "xml";
 		
@@ -239,13 +331,15 @@
 			
 			while(!feof($file)){
 				$is_true = false;
-				$title = trim(fgets($file));
+				$id_title = trim(fgets($file));
+				$title_exploded = explode(",", $id_title);
+				$title = $title_exploded[1];
 				$title = str_replace(" ", "+", $title);
-				echo "title to query: ".$title.".";
+				// echo "title to query: ".$title.".";
 				// $title = "glee";
 				
 				$toquery = 'http://www.omdbapi.com/?t='.$title.'&r=xml';
-				echo $toquery."</br>";
+				// echo $toquery."</br>";
 				
 				$query = file_get_contents($toquery);
 				$xml_substr = substr($query,40);
@@ -275,13 +369,9 @@
 	function db_add_series($xml, $mysqli){
 		mb_internal_encoding("UTF-8");
 		$title = $xml->movie[0]['title'];
+		// $title = xml_entities($title);
 		$year=  $xml->movie[0]['year'];
-		// echo "Year: " . $year . ": " . bin2hex($year) . "</br>";
-		// list($start, $end) = explode('\xe2\x80\x93', $year);
-		/*Issue of en dash which has a different encoding than a normal dash. Replacing them with "-". */
 		$year = str_replace("\xe2\x80\x93", '-', $year);
-		// echo $year . "</br>";
-		
 		
 		$rated= $xml->movie[0]['rated'];
 		// echo $rated, PHP_EOL;
@@ -295,11 +385,7 @@
 		$country= $xml->movie[0]['country'];
 		$awards= $xml->movie[0]['awards'];
 		$poster= $xml->movie[0]['poster'];
-		//TODO add poster to file to download. 
-		// $file=fopen("./series_names/img_urls.txt", "w") or die ("Unable to open file");
-		// fwrite($file,"testing\n");
-		file_put_contents("./series_names/img_urls.txt", "hejhej");
-		// echo "here I am";
+
 		if ($insert_stmt = $mysqli->prepare("INSERT INTO series (title, year, rated, released, runtime, genre, director, actors, plot, language, country, awards, poster) VALUES (?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?,?)")) {
 			$insert_stmt->bind_param('sssssssssssss', $title, $year, $rated, $released, $runtime, $genre, $director, $actors, $plot, $language, $country, $awards, $poster);
 			// Execute the prepared query.
@@ -336,6 +422,7 @@
 				}
 				
 				// $return_str.="<user_id>".$user_id."</user_id>";
+				$return_str.="<user_id>".$row["user_id"]."</user_id>";
 				$return_str.="<email>".$row["email"]."</email>";
 				$return_str.="<firstname>".$row["firstname"]."</firstname>";
 				$return_str.="<lastname>".$row["lastname"]."</lastname>";
@@ -389,18 +476,31 @@
 		
 	}
 	function remove_user($user_id, $mysqli){
+		if(empty($user_id)){
+			if($delete_stmt = $mysqli->prepare("DELETE FROM users WHERE user_id != 'admin'")){
+				$delete_stmt->execute();
+				print("All users successfully removed");
+				
+			}
+			else{
+				print("Failed removing all users");
+			}
+		}else{
+			if($user_id != "admin"){
+				if($delete_stmt = $mysqli->prepare("DELETE FROM users WHERE user_id = ?")){
+					$delete_stmt-> bind_param ('s', $user_id);
+					$delete_stmt->execute();
+					print($user_id . " successfully removed");
+					
+				}
+				else{
+					print("Failed removing: $user_id from the system");
+				}
+			}
+		}
 		
-		print("inside remove_user");
-		if($delete_stmt = $mysqli->prepare("DELETE FROM users WHERE user_id = ?")){
-			$delete_stmt-> bind_param ('s', $user_id);
-			$delete_stmt->execute();
-			print($user_id . " successfully removed");
-			
-		}
-		else{
-			print("Failed removing: $user_id from the system");
-		}
 	}
+	
 	function unsubscribe($title, $mysqli, $user_id){
 		if($delete_stmt = $mysqli->prepare("DELETE FROM subsribes WHERE user_id = ? AND title = ?")){
 			$delete_stmt->bind_param('ss', $user_id, $title);
@@ -411,22 +511,39 @@
 		}
 	}
 	function remove_series($mysqli, $title){
-		if($delete_stmt = $mysqli->prepare("DELETE FROM series WHERE title = ?")){
-			$delete_stmt->bind_param('s', $title);
-			$delete_stmt->execute();
-			print("Successfully deleted $title from series table");
-		}else{
-			print("Failed deleting series from table series: $title");
-		}
-		if($delete_stmt = $mysqli->prepare("DELETE FROM subsribes WHERE title = ?")){
-			$delete_stmt->bind_param('s', $title);
-			$delete_stmt->execute();
-			print("Successfully deleted $title from subscribes table");
-		}else{
-			print("Failed deleting series from table subsribes: $title");
-		}
 		
-		// unsubscribe($title, $mysqli, $user_id);
+		if(empty($title)){
+			if($delete_stmt = $mysqli->prepare("DELETE FROM series")){
+				$delete_stmt->execute();
+				print("Successfully deleted all series from table series");
+			}else{
+				print("Failed deleting all series from table series");
+			}
+			
+			if($delete_stmt = $mysqli->prepare("DELETE FROM subsribes")){
+				$delete_stmt->execute();
+				print("Successfully deleted all series and users from table subscribes");
+			}else{
+				print("Failed deleting all series and users from table subsribes");
+			}
+			
+		}else{
+			if($delete_stmt = $mysqli->prepare("DELETE FROM series WHERE title = ?")){
+				$delete_stmt->bind_param('s', $title);
+				$delete_stmt->execute();
+				print("Successfully deleted $title from series table");
+			}else{
+				print("Failed deleting series from table series: $title");
+			}
+			
+			if($delete_stmt = $mysqli->prepare("DELETE FROM subsribes WHERE title = ?")){
+				$delete_stmt->bind_param('s', $title);
+				$delete_stmt->execute();
+				print("Successfully deleted $title from subscribes table");
+			}else{
+				print("Failed deleting series from table subsribes: $title");
+			}
+		}
 	}
 	
 	function test($title){

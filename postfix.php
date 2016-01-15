@@ -2,8 +2,7 @@
 // Put XML content into a string
 $xmlstr = trim(ob_get_contents());
 ob_end_clean();
-// echo "!.." . $xmlstr . "..!";
-
+ 
 // Check if there was an error
 if (!is_null(error_get_last()))
 {
@@ -23,7 +22,7 @@ $xsl = new DOMDocument;
 
 // If not a mobile phone, use a html stylesheet
 header('Content-type: text/html');
-$xsl->load('index-html.xsl');
+$xsl->load('xsl/index-html.xsl');
 
 
 // Make the transformation and print the result

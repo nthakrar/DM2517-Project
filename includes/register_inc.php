@@ -13,6 +13,8 @@ if (isset($_POST['user_id'], $_POST['email'], $_POST['p'])) {
     $user_id = filter_input(INPUT_POST, 'user_id', FILTER_SANITIZE_STRING);
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
     $email = filter_var($email, FILTER_VALIDATE_EMAIL);
+	$firstname=$_POST["firstname"];
+	$lastname=$_POST["lastname"];
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         // Not a valid email
         $error_email_msg .= '<p class="error">The email address you entered is not valid</p>';
@@ -62,7 +64,6 @@ if (isset($_POST['user_id'], $_POST['email'], $_POST['p'])) {
  
 		if ($stmt->num_rows == 1) {
 				// A user with this username already exists
-				// $error_msg .= '<p class="error">A user with this username already exists</p>';
 				$error_user_msg = '<p class="error">A user with this username already exists</p>';
 				$stmt->close();
 		}
@@ -82,8 +83,8 @@ if (isset($_POST['user_id'], $_POST['email'], $_POST['p'])) {
         $password = hash('sha512', $password . $random_salt);
  
         // Insert the new user into the database 
-        if ($insert_stmt = $mysqli->prepare("INSERT INTO users (user_id, password, salt, email) VALUES (?, ?, ?, ?)")) {
-            $insert_stmt->bind_param('ssss', $user_id, $password, $random_salt, $email);
+        if ($insert_stmt = $mysqli->prepare("INSERT INTO users (user_id, password, salt, email, firstname, lastname) VALUES (?, ?, ?, ?, ?, ?)")) {
+            $insert_stmt->bind_param('ssssss', $user_id, $password, $random_salt, $email, $firstname, $lastname);
             // Execute the prepared query.
             if (! $insert_stmt->execute()) {
                 header('Location: ../error.php?err=Registration failure: INSERT');

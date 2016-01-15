@@ -1,0 +1,72 @@
+\chapter{Beskrivning}
+
+Vår hemsida är en XML-baserad internettjänst som hämtar information om serier och användare från MySQL databastabeller med hjälp av PHP. Informationen sparas i XML format och med hjälp av olika XSL stylesheets omvandlas XML till XHTML för webbläsare och för Excel och Open Office Calc. I följande sektion beskrivs de databastabeller som används för tjänsten, var vi hämtat data ifrån och vilken struktur/standard som vi har definierat för XML.
+
+\section{Databas och DTD}
+Vi använder oss totalt 4 databastabeller:
+\begin{itemize}
+\item series
+\item series\_id
+\item users
+\item subsribes
+\end{itemize}
+All information om TV-serier har vi hämtat från en gratis online databas: OMDb API som tillhandahåller ett gratis API (http://www.omdbapi.com). Genom att skicka med olika GET parametrar till en URL så får man tillbaka informationen i antingen JSON eller XML format. Nedan har vi inkluderat ett exempel med parametrarna t för title och r för format.  
+
+\begin{lstlisting}
+http://www.omdbapi.com/?t=glee&r=xml
+\end{lstlisting}
+Vilket ger tillbaka resultat i följande format:
+\begin{lstlisting}
+<?xml version="1.0" encoding="UTF-8"?><root response="True"><movie title="Glee" year="2009-2015" rated="TV-PG" released="19 May 2009" runtime="44 min" genre="Comedy, Drama, Music" director="N/A" writer="Ian Brennan, Brad Falchuk, Ryan Murphy" actors="Chris Colfer, Jane Lynch, Kevin McHale, Lea Michele" plot="A group of ambitious misfits try to escape the harsh realities of high school by joining a glee club, where they find strength, acceptance and, ultimately, their voice, while working to pursue dreams of their own." language="English" country="USA" awards="Won 4 Golden Globes. Another 68 wins & 176 nominations." poster="http://ia.media-imdb.com/images/M/MV5BMTU0OTA5MjA0MF5BMl5BanBnXkFtZTcwNzY0NTY0OA@@._V1_SX300.jpg" metascore="N/A" imdbRating="6.7" imdbVotes="114,316" imdbID="tt1327801" type="series"/></root>
+\end{lstlisting}
+
+Det finns totalt 569 serier i databasen. Namnen för dessa hämtade vi från sidan \url{https://showrss.info/?cs=feeds}. Till varje serie ges det ett ID på showrss för en RSS feed vilket vi har använt oss av i projektet för att kunna visa för användarna vilka de senaste avsnitten är och när de visades. Vi sparade par av namn och ID för serierna i en fil som vi läser ifrån i php funktionen: 
+\begin{lstlisting}
+function query_omdb($mysqli) 
+\end{lstlisting}
+Varje XML respons som vi får från OMDb API parsar vi och lägger till i databastabellen 'series'. I tabellen series\_id sparar vi par av namn och ID.
+
+Eftersom vår hemsida ska kunna ha användare har vi en users tabell där vi sparar användarnamn, lösenord (hashad), salt, email, förnamn och efternamn. 
+
+I grova drag har vi organiserat XML så att vi har en <root> tag och inne i <root> har vi definierat <usercatalog> och <seriescatalog>. I <usercatalog> kan det finnas högst en <user>, dvs en inloggad användare eller ingen inloggad alls och i series kan det finnas 0 eller många <series>. Vi inkluder create statements för alla databastabeller inklusive DTD i Appendix. 
+
+\section{XSL transformationer}
+All information som hämtas från databasen sparar vi i XML. All information om en användare sparas i <user> och all information om serierna <series>. Med XSL transformerar vi XML till XHTML för websidan och till Excel. Alla XSL filer finns i xsl katalogen.
+
+\section{Sidor}
+\subsection{Registrering}
+Är man nykommen till hemsidan så kan man registrera sig. Det finns 4 obligatoriska fält: username, password, confirm password och email som man måste fylla i. I JavaScripts funktionen:
+\begin{lstlisting} 
+function regformhash(form, uid, email, password, conf) 
+\end{lstlisting}
+säkerställer vi att alla fälten är ifyllda, att password och confirm password är identiska, att man väljer ett lösenord som är minst 6 tecken lång etc. Vi bestämde oss för att inte skicka iväg lösenord i klartext till server och att därför hasha det av användaren givna lösenordet med sha512. 
+På serversidan i register\_inc.php valideras email adressen. Om den inte är giltig så skrivs ett error meddelande tillbaka till klienten. Om det redan finns ett identiskt username i users tabellen så gör vi användaren medveten om det med ett felmeddelande. Vid en lyckad registrering läggs det till en post i users tabellen med kolumnerna user\_id, password, salt, email, firstname och lastname. Saltet genereras med hash funktionen i php och password är resultatet av hashningen av saltet tillsammans med lösenordet användaren angett. Slutligen skickas användaren tillbaka till startsidan för att slutföra sin inloggning.
+
+
+\subsection{Startsida}
+Startsidan (och alla andra sidor för den delen) är designad så att det finns en user kolumn till vänster där man kan logga in/registrera sig eller välja mellan olika menyval om man är inloggad. Resten av sidan är ägnad åt TV-serier. De serier som visas här har alla utgivningsår 2015 och det är detta som vi kallar för `What's trending`. Varje serie presenteras med titel, poster och utgivningsår. Vill man se alla serier oavsett utgivningsår kan man göra det genom att trycka på `View all series`. 
+
+Man kan söka på de serier som finns sparade i databasen vilket vi har implementerat med hjälp av JQuery-UI autocomplete. Sökningen sker med hjälp av ett Ajax request som skickas till servern.
+
+
+
+Trycker man på en godtycklig serie visas all information inklusive handling, skådespelare, språk, nomineringar etc.
+
+\subsubsection{Log in}
+I php funktionen 
+\begin{lstlisting} 
+login($user_id, $password, $mysqli)
+\end{lstlisting} söker vi efter det angivna användarnamnet och hämtar ut det sparade lösenordet och saltet som genererades vid registreringen. Lösenordet som användaren angivit hashar vi tillsammans med saltet och om resultatet är identiskt med lösenordet sparat i databastabellen så har användaren lyckat autentiera sig. Vi använder oss av sessioner så att en användare förblir inloggad på alla sidor när han/hon navigerar hemsidan. Sessionsvariablerna user\_id och login\_string definieras och dessa används varje gång vi
+vill kolla om en användare är inloggad i funktionen 
+\begin{lstlisting} 
+function login_check($mysqli)
+\end{lstlisting}
+
+Startsidan ser annorlunda ut beroende på om användaren är inloggad eller inte. Detta testar vi genom att lägga till ett attribut i <user> status som kan ha värdet logged\_in eller logged\_off. När vi matchar taggar i XSL så kollar vi efter status och lägger till passade HTML.
+
+När man trycker på subscribe så skickas ett ajax request till servern. På serversidan verifieras att användaren är inloggad och att användaren inte redan följer den serien och en post läggs till i subsribes tabellen. Den här serien kommer nu visas på användarens privata sida. 
+
+\subsection{Användarsida}
+Hit kommer man vid en lyckad inloggning och här visas ens kollektion av Tv-serier. I menyn kan man ta sig till `What's trending`, uppdatera sin profil genom att ändra på sitt förnamn, efternamn och/eller email adress. Man kan exportera till Excel vilket gör det möjligt att ladda ner XML i ett format som kan kännas igen av Excel/Open Office Calc. Man kan kolla Kalender där de senaste avsnitten och deras publiseringsdatum visas för alla serier man följer. Detta har vi fixat genom att parsa RSS feeds för var och en av serierna via showrss som nämnts tidigare. Vi byggde URL för RSS feeds med hjälp av att bygga URL på följande format \url{http://showrss.info/feeds/[ID].rss} där ID hämtas från series\_id tabellen. Slutligen så kan man logga ut vilket medför att alla sessionvariabler töms och sessionen förstörs. 
+
+Det finns en speciell användare: admin. Admin ser alla serier som finns sparade i databasen och kan ta bort valfri serie alternativt alla serier. Admin ser också vilka användare som är registrerade och kan ta bort valfri/alla användare. Vidare kan admin exportera till Excel vilket fungerar på samma sätt som beskrivet ovan bara att XML filen är betydligt större. 

@@ -2,7 +2,6 @@
 	// Put XML content into a string
 	$xmlstr = trim(ob_get_contents());
 	ob_end_clean();
-	// echo "!.." . $xmlstr . "..!";
 
 	// Check if there was an error
 	if (!is_null(error_get_last()))
@@ -21,9 +20,18 @@
 
 	// See which user agent is connecting
 
-	// If not a mobile phone, use a html stylesheet
-	header('Content-type: text/html');
-	$xsl->load('admin-html.xsl');
+	if(!empty($_POST["action"]) && $_POST["action"]=="export_excel"){
+		header('Content-type: text/xml');
+		$xsl->load('xsl/admin-excel.xsl');
+		
+
+	}else{
+		header('Content-type: text/html');
+		$xsl->load('xsl/admin-html.xsl');
+	}
+	
+	// header('Content-type: text/html');
+	// $xsl->load('admin-html.xsl');
 
 
 	// Make the transformation and print the result
